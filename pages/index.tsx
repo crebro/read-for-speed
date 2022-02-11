@@ -1,6 +1,7 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { useEffect, useRef, useState } from 'react';
+import SessionDetails from  "../components/SessionDetails";
 
 const Home: NextPage = () => {
   const [contents, setContents] = useState<string>('');
@@ -99,6 +100,7 @@ const Home: NextPage = () => {
           }
         </div>
       </div>
+      <SessionDetails onSelection={(index) => setWordIndex(index) } words={wordList} currentIndex={wordIndex} allowSelection={ paused && reading }/>
     </div>
   )
 }
