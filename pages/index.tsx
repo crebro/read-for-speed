@@ -8,6 +8,7 @@ const Home: NextPage = () => {
   const [wordList, setWordList] = useState<string[]>(["Hello!"]) ;
   const [reading, setReading] = useState(false);
   const [playingInterval, setPlayingInterval] = useState<NodeJS.Timer | null>();
+  const [paused, setPaused] = useState(false);
 
   const getWordList = (contents: string) => {
     setWordList(contents.split(' '));
@@ -18,19 +19,8 @@ const Home: NextPage = () => {
     setReading(true);
   }
 
-  const stopReading = () => {
-    if (playingInterval) {
-      window.clearInterval(playingInterval);
-      setReading(false);
-      setWordIndex(0);
-      setPlayingInterval(null);
-    }
-  }
-
-  useEffect(() => {
-    if (reading) {
-      const interval = setInterval(() => {
-        console.log('I am wondienrg');
+  const startInterval = () : NodeJS.Timer => {
+    const interval = setInterval(() => {
         setWordIndex((prevIndex) => {
           if (prevIndex >= wordList.length - 1) {
             window.clearInterval(interval);
@@ -40,10 +30,40 @@ const Home: NextPage = () => {
           }
           return prevIndex + 1
         });
-      }, 150);
+    }, 200);
+    return interval;
+  };
+
+  const stopReading = () => {
+    if (playingInterval) {
+      window.clearInterval(playingInterval);
+    }
+    setReading(false);
+    setWordIndex(0);
+    setPaused(false);
+    setPlayingInterval(null);
+  }
+
+  const togglePause = () => {
+    if (paused) {
+      const interval = startInterval();
+      setPaused(false);
+      setPlayingInterval(interval);
+      return;
+    }
+    if (playingInterval) {
+      window.clearInterval(playingInterval);
+      setPaused(true);
+      setPlayingInterval(null);
+    }
+  }
+
+  useEffect(() => {
+    if (reading) {
+      const interval = startInterval();
       setPlayingInterval(interval);
     }
-  }, [reading])
+  }, [reading]);
   
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-center '>
@@ -55,12 +75,29 @@ const Home: NextPage = () => {
         <div className='text-xl '> Read documents like a pro, without spending a minute more</div>
         {
           !reading ? 
-          <textarea className='w-full py-2 px-2 border-1 bg-gray-300 rounded-lg border-red-100 outline-1 outline-blue-700' onChange={(e) => setContents(e.currentTarget.value)} rows={10} defaultValue={contents} />
-          : <div className='font-bold my-10 text-3xl flex items-center justify-center'>
-            { wordList[wordIndex] }
+          <textarea className='w-full py-2 px-2 border-1 bg-gray-300 rounded-lg border-red-100 outline-1 outline-blue-700 mt-4' onChange={(e) => setContents(e.currentTarget.value)} rows={10} defaultValue={contents} />
+          : <div className='my-10 text-xl flex items-center justify-center'>
+            {
+              wordList.slice(wordIndex - 3, wordIndex - 1).map((word, index) => {
+                return <span key={index} className='mx-2 w-1/5 flex items-center justify-center'> {word} </span>
+              })
+            }
+            <span className='font-bold mx-2 w-1/5 flex items-center justify-center'>{ wordList[wordIndex] } </span>
+            {
+              wordList.slice(wordIndex + 1, wordIndex + 3).map((word, index) => {
+                return <span key={index} className='mx-2 w-1/5 flex items-center justify-center'> {word} </span>
+              })
+            }
            </div>
         }
-        <button onClick={() =>  !reading ? startReading() : stopReading()} className={`${ reading ? 'bg-red-400' : 'bg-indigo-500'} transition duration-150 my-2 text-white px-4 py-2 w-full`}> { reading ? "Stop Reading" : "Start Reading" } </button>
+        <div className='flex items-center justify-center'>
+          <button onClick={() =>  !reading ? startReading() : stopReading()} className={`${ reading ? 'bg-red-500' : 'bg-indigo-500'} rounded-lg transition duration-150 my-2 text-white px-4 py-2 w-full mr-2`}> { reading ? "Stop Reading" : "Start Reading" } </button>
+          {
+            reading ?   
+            <button onClick={() =>  togglePause()} className={`bg-indigo-500 rounded-lg transition duration-150 my-2 text-white px-4 py-2 w-full ml-2`}> { !paused ? "Pause Reading Session" : "Continue Reading Session" } </button>
+            : ""
+          }
+        </div>
       </div>
     </div>
   )
